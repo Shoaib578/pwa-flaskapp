@@ -43,8 +43,9 @@ mail = Mail(app)
 geocoder = Nominatim(user_agent='TimeClock')
 
 
-cursor = mysql.connection.cursor()
-cursor.execute("CREATE DATABASE IF NOT EXISTS `db06o0vvfcjdng` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;")
+create = mysql.connection.cursor()
+create.execute("CREATE DATABASE IF NOT EXISTS `db06o0vvfcjdng` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;")
+create.close()
 
 # Run in MySQL Workbench
 # USE `TimeClock`;
