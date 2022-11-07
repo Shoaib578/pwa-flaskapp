@@ -24,7 +24,7 @@ app = Flask(__name__, template_folder='templates')
 # run_with_ngrok(app)
 app.secret_key = 'asdasda090293Asd'
 
-app.config['MYSQL_HOST'] = 'ec2-18-215-41-121.compute-1.amazonaws.com'
+app.config['MYSQL_HOST'] = 'localhost'
 app.config['MYSQL_USER'] = 'sosxudybookojq'
 app.config['MYSQL_PORT'] = 5432
 
