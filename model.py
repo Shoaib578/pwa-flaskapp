@@ -24,7 +24,7 @@ app = Flask(__name__, template_folder='templates')
 # run_with_ngrok(app)
 app.secret_key = 'asdasda090293Asd'
 
-app.config['MYSQL_HOST'] = 'ec2-18-215-41-121.compute-1.amazonaws.com'
+app.config['MYSQL_HOST'] = 'https://flask-pwa.herokuapp.com'
 app.config['MYSQL_USER'] = 'sosxudybookojq'
 app.config['MYSQL_PORT'] = 5432
 
@@ -43,9 +43,9 @@ mail = Mail(app)
 geocoder = Nominatim(user_agent='TimeClock')
 
 
-create = mysql.connection.cursor()
-create.execute("CREATE DATABASE IF NOT EXISTS `db06o0vvfcjdng` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;")
-create.close()
+# create = mysql.connection.cursor()
+# create.execute("CREATE DATABASE IF NOT EXISTS `db06o0vvfcjdng` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;")
+# create.close()
 
 # Run in MySQL Workbench
 # USE `TimeClock`;
