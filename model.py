@@ -1,6 +1,6 @@
 # Todo: HASH PASSWORD
 # Todo: PASSWORD THE DATABASE
-
+import os
 import mimetypes
 import os.path
 import re
@@ -27,12 +27,10 @@ from flask_marshmallow import Marshmallow
 # template_dir = os.path.abspath('D:/InternWork/PythonDocker - Flask/template')
 app = Flask(__name__, template_folder='templates')
 # run_with_ngrok(app)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:@localhost/timeclock'
-
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-app.config['SECRET_KEY'] = 'asodjasjd02309aasdAS'
-
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
 
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 465

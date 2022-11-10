@@ -9,6 +9,7 @@ Django==4.1.2
 et-xmlfile==1.1.0
 Flask==2.0.2
 Flask-Mail==0.9.1
+flask-marshmallow==0.14.0
 Flask-Migrate==3.1.0
 Flask-MySQLdb==1.0.1
 Flask-SQLAlchemy==2.5.1
@@ -22,14 +23,18 @@ itsdangerous==2.1.2
 Jinja2==3.1.2
 Mako==1.2.3
 MarkupSafe==2.1.1
+marshmallow==3.18.0
+marshmallow-sqlalchemy==0.28.1
 mysqlclient==2.1.1
 ntplib==0.4.0
 numpy==1.23.4
 openai==0.24.0
 openpyxl==3.0.10
+packaging==21.3
 pandas==1.5.1
 pandas-stubs==1.5.1.221024
 psycopg2==2.9.3
+pyparsing==3.0.9
 python-dateutil==2.8.2
 python-dotenv==0.19.2
 pytz==2022.6
