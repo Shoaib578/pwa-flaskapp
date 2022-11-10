@@ -128,26 +128,26 @@
 		<!--<h6 class="center">DETAILS</h6>-->
 		<div id="time" class="powered"></div>
 		{% for i in range(0,len) %}
-		{% if 'In' in data[i][2] %}
-		<div id="DOM" class="card-panel recipe white row" data-id="{{data[i][0]}}" style="border-left: 8px solid green">
+		{% if 'In' in data[i]['direction'] %}
+		<div id="DOM" class="card-panel recipe white row" data-id="{{data[i]['id']}}" style="border-left: 8px solid green">
 			<img src="/static/images/time-card.png" alt="recipe thumb">
 			<div class="recipe-details">
-			  <div id="DOM" class="recipe-title">Time {{data[i][2]}}: {{data[i][4]}}</div>
-			  <div id="DOM" class="recipe-ingredients">{{data[i][3]}}</div>	  
+			  <div id="DOM" class="recipe-title">Time {{data[i]['direction']}}: {{data[i]['time']}}</div>
+			  <div id="DOM" class="recipe-ingredients">{{data[i]['location']}}</div>	  
 			</div>
 			<div id="DOM" class="recipe-delete">
-				<a  href="{{ url_for('delusertime', id = data[i][0]) }}"><i class="material-icons" data-id="${id}">delete_outline</i></a>
+				<a  href="{{ url_for('delusertime', id = data[i]['id']) }}"><i class="material-icons" data-id="${id}">delete_outline</i></a>
 			</div>
 		</div>		
 		{% else %}
-		<div id="DOM" class="card-panel recipe white row" data-id="{{data[i][0]}}" style="border-left: 8px solid red">
+		<div id="DOM" class="card-panel recipe white row" data-id="{{data[i]['id']}}" style="border-left: 8px solid red">
 			<img src="/static/images/time-card.png" alt="recipe thumb">
 			<div class="recipe-details">
-			  <div id="DOM" class="recipe-title">Time {{data[i][2]}}: {{data[i][4]}}</div>
-			  <div id="DOM" class="recipe-ingredients">{{data[i][3]}}</div>	  
+			  <div id="DOM" class="recipe-title">Time {{data[i]['direction']}}: {{data[i]['time']}}</div>
+			  <div id="DOM" class="recipe-ingredients">{{data[i]['location']}}</div>	  
 			</div>
 			<div id="DOM" class="recipe-delete">
-			  <a  href="{{ url_for('delusertime', id = data[i][0]) }}"><i class="material-icons" data-id="${id}">delete_outline</i></a>
+			  <a  href="{{ url_for('delusertime', id = data[i]['id']) }}"><i class="material-icons" data-id="${id}">delete_outline</i></a>
 			</div>
 		</div>
 		{% endif %}

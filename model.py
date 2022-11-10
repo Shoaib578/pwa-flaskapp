@@ -16,20 +16,24 @@ from flask_mysqldb import MySQL
 import ntplib
 from time import ctime
 import pandas as pd
+from sqlalchemy import text
+from flask_sqlalchemy import SQLAlchemy
+from flask_marshmallow import Marshmallow
+
+
 
 # For PWA deployment ngrok is to be removed.
 
 # template_dir = os.path.abspath('D:/InternWork/PythonDocker - Flask/template')
 app = Flask(__name__, template_folder='templates')
 # run_with_ngrok(app)
-app.secret_key = 'asdasda090293Asd'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:@localhost/timeclock'
 
-app.config['MYSQL_HOST'] = 'ec2-18-215-41-121.compute-1.amazonaws.com'
-app.config['MYSQL_USER'] = 'sosxudybookojq'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+app.config['SECRET_KEY'] = 'asodjasjd02309aasdAS'
 
 
-app.config['MYSQL_PASSWORD'] = 'ae3d993776aedd031acb6f36f226898f9bac0c227350188a48bf88ac68bf9fd8'
-app.config['MYSQL_DB'] = 'db06o0vvfcjdng'
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 465
 app.config['MAIL_USERNAME'] = 'timeclockaktus@gmail.com'
@@ -37,15 +41,59 @@ app.config['MAIL_PASSWORD'] = 'ziejscjumlsducgf'
 # email password: adminPassword123
 app.config['MAIL_USE_TLS'] = False
 app.config['MAIL_USE_SSL'] = True
-
-mysql = MySQL(app)
+ma= Marshmallow(app)
+db = SQLAlchemy(app)
 mail = Mail(app)
 geocoder = Nominatim(user_agent='TimeClock')
 
 
-# create = mysql.connection.cursor()
-# create.execute("CREATE DATABASE IF NOT EXISTS `db06o0vvfcjdng` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;")
-# create.close()
+
+
+class userview(db.Model):
+    id = db.Column(db.Integer(), primary_key=True)
+    username = db.Column(db.String(100),nullable=True)
+    direction = db.Column(db.String(100),nullable=True)
+    location = db.Column(db.String(100),nullable=True)
+    time = db.Column(db.String(100),nullable=True)
+    servertime = db.Column(db.String(100),nullable=True)
+
+class UserViewSchema(ma.Schema):
+    class Meta:
+        fields = ("id","username","direction","location","time","servertime")
+
+
+
+
+class users(db.Model):
+    id = db.Column(db.Integer(), primary_key=True)
+    username = db.Column(db.String(100),nullable=True)
+    email = db.Column(db.String(100),nullable=True)
+    password = db.Column(db.String(255),nullable=True)
+    macaddress = db.Column(db.String(100),nullable=True)
+    admin = db.Column(db.Integer(),nullable=True)
+    superadmin = db.Column(db.Integer(),nullable=True)
+    recovery = db.Column(db.String(100),nullable=True)
+
+class UsersSchema(ma.Schema):
+    class Meta:
+        fields = ("id","username","email","password","macaddress","admin","superadmin","recovery")
+
+class clock(db.Model):
+    id = db.Column(db.Integer(), primary_key=True)
+    username = db.Column(db.String(100),nullable=True)
+    direction = db.Column(db.String(100),nullable=True)
+    location = db.Column(db.String(100),nullable=True)
+    time = db.Column(db.String(100),nullable=True)
+    servertime = db.Column(db.String(100),nullable=True)
+
+
+class ClockSchema(ma.Schema):
+    class Meta:
+        fields = ("id", "username", "direction", "location", "time", "servertime")
+
+
+# cursor = mysql.connection.cursor()
+# cursor.execute('''CREATE DATABASE IF NOT EXISTS `TimeClock` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;
 
 # Run in MySQL Workbench
 # USE `TimeClock`;
@@ -105,15 +153,19 @@ def sw():
 @app.route('/', methods=['GET', 'POST'])
 def log_in():
     msg = ''
+    
     if request.method == 'POST' and 'username' in request.form and 'password' in request.form:
         username = request.form['username']
         password = request.form['password']
         macaddress = hex(uuid.getnode())
-        cursor = mysql.connection.cursor()
-        cursor.execute('SELECT * FROM users WHERE username = % s AND password = % s', (username, password,))
-        account = cursor.fetchone()
+        
+        query = text("SELECT * FROM users WHERE username='"+username+ "' AND password='"+ password+"'")
+        engine = db.engine.execute(query)
+        schema = UsersSchema(many=True)
+        account = schema.dump(engine)
+      
         if account:
-            if macaddress == account[4]:
+            if macaddress == account[0]['macaddress']:
                 session['username'] = request.form['username']
                 return redirect(url_for('home'))
             else:
@@ -140,11 +192,14 @@ def sign_up():
         password = request.form['password']
         confirmpassword = request.form['confirmPassword']
         macaddress = hex(uuid.getnode())
-        cursor = mysql.connection.cursor()
-        cursor.execute('''SELECT * FROM users WHERE username = % s''', (username,))
-        usernamedup = cursor.fetchone()
-        cursor.execute('''SELECT * FROM users WHERE email = % s''', (email,))
-        account = cursor.fetchone()
+        
+        query1 = text("SELECT * FROM users WHERE username = '"+username+"'")
+        engine1 = db.engine.execute(query1)
+        schema = UsersSchema(many=True)
+        usernamedup =schema.dump(engine1)
+        query2 = text("SELECT * FROM users WHERE email = '"+ email+"'")
+        engine2 = db.engine.execute(query2)
+        account = schema.dump(engine2)
         if usernamedup:
             msg = "Username is already in use !"
         elif account:
@@ -156,9 +211,8 @@ def sign_up():
         elif password != confirmpassword:
             msg = 'Passwords do not match!'
         else:
-            cursor.execute('INSERT INTO users VALUES (NULL, % s, % s, % s, % s, 0, 0, NULL)',
-                           (username, email, password, macaddress,))
-            mysql.connection.commit()
+            insert_query = text("INSERT INTO users(username,email,password,macaddress,admin,superadmin,recovery) VALUES ({},{},{},{},0,0,NULL)".format("'"+username+"'", "'"+email+"'", "'"+password+"'", "'"+macaddress+"'"))
+            engine = db.engine.execute(insert_query)
             msg = 'You have successfully registered !'
 
     elif request.method == 'POST':
@@ -209,11 +263,16 @@ def change_password():
         password = request.form['password']
         confirmPassword = request.form['confirmPassword']
         OTP = request.form['otpcode']
-        account = cursor.execute('''SELECT * FROM users WHERE username = % s AND recovery = % s''', (username, OTP,))
+        query1 = text("SELECT * FROM users WHERE username = '"+username+"' AND recovery = '"+OTP+"'")
+        engine1 = db.engine.execute(query1)
+        # account = cursor.execute('''SELECT * FROM users WHERE username = % s AND recovery = % s''', (username, OTP,))
+        
         if account == 1:
             if password == confirmPassword:
-                cursor.execute('''UPDATE users SET password = % s WHERE username = %s''', (password, username))
-                mysql.connection.commit()
+                query1 = text("SELECT * FROM users SET password = '"+password+" WHERE username = '"+username+"'")
+                engine1 = db.engine.execute(query1)
+                # cursor.execute('''UPDATE users SET password = % s WHERE username = %s''', (password, username))
+                # mysql.connection.commit()
                 msg = 'Password has been changed!'
             elif password != confirmPassword:
                 msg = 'Password does not match!'
@@ -235,30 +294,45 @@ def home():
         if location != "" and time != "":
             username = session.get("username")
             servertime = str(ntp_time())
-            cursor = mysql.connection.cursor()
-            cursor.execute('INSERT INTO clock VALUES (NULL, % s, % s, % s, % s, % s)',
-                            (username, direction, location, time, servertime))
-            mysql.connection.commit()
-            cursor.execute('INSERT INTO userview VALUES (NULL, % s, % s, % s, % s, % s)',
-                            (username, direction, location, time, servertime))
-            mysql.connection.commit()
+            insert_query = text("INSERT INTO clock(username,direction,location,time,servertime) VALUES ({},{},{},{},{})".format("'"+username+"'", "'"+direction+"'", "'"+location+"'", "'"+time+"'", "'"+servertime+"'"))
+            engine = db.engine.execute(insert_query)
+            msg = 'User successfully registered !'
+            
+            # insert_query = text('INSERT INTO clock VALUES (NULL, % s, % s, % s, % s, % s)',
+            #                 (username, direction, location, time, servertime))
+            # mysql.connection.commit()
+            insert_query = text("INSERT INTO userview(username,direction,location,time,servertime) VALUES ({},{},{},{},{})".format("'"+username+"'", "'"+direction+"'", "'"+location+"'", "'"+time+"'", "'"+servertime+"'"))
+            engine = db.engine.execute(insert_query)
+            msg = 'Userview successfully registered !'
+
+            # cursor.execute('INSERT INTO userview VALUES (NULL, % s, % s, % s, % s, % s)',
+            #                 (username, direction, location, time, servertime))
+            # mysql.connection.commit()
         else:
             pass
     username = session.get("username")
-    cursor = mysql.connection.cursor()
-    cursor.execute('''SELECT * FROM userview WHERE username = % s ORDER BY id DESC''', (username,))
-    data = cursor.fetchall()
+    query1 = text("SELECT * FROM userview WHERE username = '"+username+"' ORDER BY id DESC")
+    selectQuery = db.engine.execute(query1)
+    schema = UserViewSchema(many=True)
+    data = schema.dump(selectQuery)
+    print(data)
+    # cursor = mysql.connection.cursor()
+    # cursor.execute('''SELECT * FROM userview WHERE username = % s ORDER BY id DESC''', (username,))
+    # data = cursor.fetchall()
     # Data is clock in and clock out data and sAdmin checks if the user is a super admin and admin checks if the user is an admin
     return render_template('home.html', data=data, len=len(data))
+    
 
 
 # Delete user info from main admin page
 @app.route('/delusertime/<int:id>', methods=['POST', 'GET'])
 def delusertime(id):
-    cursor = mysql.connection.cursor()
-    cursor.execute('DELETE FROM userview WHERE id = % s', (id,))
-    cursor.fetchone()
-    mysql.connection.commit()
+    query1 = text("DELETE FROM userview WHERE id = '"+str(id)+"'")
+    engine1 = db.engine.execute(query1)
+    # cursor = mysql.connection.cursor()
+    # cursor.execute('DELETE FROM userview WHERE id = % s', (id,))
+    # cursor.fetchone()
+    # mysql.connection.commit()
     return redirect(url_for('home'))
 
 
@@ -272,4 +346,4 @@ def about_page():
 
 
 if __name__ == '__main__':
-    app.run()
+    app.run(debug=True)
